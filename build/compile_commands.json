@@ -1,0 +1,14 @@
+[
+{
+  "directory": "C:/Users/Work/Documents/C++/projects/MusicXMLReader/build",
+  "command": "C:\\Users\\Work\\Documents\\C++\\MSY32\\ucrt64\\bin\\g++.exe -IC:/Users/Work/Documents/C++/projects/MusicXMLReader/lib/pugixml -g -o CMakeFiles\\MusicXMLReader.dir\\main.cpp.obj -c C:\\Users\\Work\\Documents\\C++\\projects\\MusicXMLReader\\main.cpp",
+  "file": "C:/Users/Work/Documents/C++/projects/MusicXMLReader/main.cpp",
+  "output": "C:/Users/Work/Documents/C++/projects/MusicXMLReader/build/CMakeFiles/MusicXMLReader.dir/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/Work/Documents/C++/projects/MusicXMLReader/build",
+  "command": "C:\\Users\\Work\\Documents\\C++\\MSY32\\ucrt64\\bin\\g++.exe -IC:/Users/Work/Documents/C++/projects/MusicXMLReader/lib/pugixml -g -o CMakeFiles\\MusicXMLReader.dir\\lib\\pugixml\\pugixml.cpp.obj -c C:\\Users\\Work\\Documents\\C++\\projects\\MusicXMLReader\\lib\\pugixml\\pugixml.cpp",
+  "file": "C:/Users/Work/Documents/C++/projects/MusicXMLReader/lib/pugixml/pugixml.cpp",
+  "output": "C:/Users/Work/Documents/C++/projects/MusicXMLReader/build/CMakeFiles/MusicXMLReader.dir/lib/pugixml/pugixml.cpp.obj"
+}
+]

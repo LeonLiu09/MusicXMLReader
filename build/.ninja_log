@@ -1,0 +1,5 @@
+# ninja log v7
+1	329	8080847451143238	CMakeFiles/MusicXMLReader.dir/lodetest.cpp.obj	8ec55c9be4aadbc4
+3	1224	8080847451168311	CMakeFiles/MusicXMLReader.dir/lib/pugixml/pugixml.cpp.obj	33ca976a87c53a76
+1034	1144	8081443451231317	MusicXMLReader.exe	36fc7395e09d96f
+4	1032	8081443440928092	CMakeFiles/MusicXMLReader.dir/main.cpp.obj	4390869d5a20435c

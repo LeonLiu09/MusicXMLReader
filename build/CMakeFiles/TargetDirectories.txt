@@ -1,0 +1,3 @@
+C:/Users/Work/Documents/C++/projects/MusicXMLReader/build/CMakeFiles/MusicXMLReader.dir
+C:/Users/Work/Documents/C++/projects/MusicXMLReader/build/CMakeFiles/edit_cache.dir
+C:/Users/Work/Documents/C++/projects/MusicXMLReader/build/CMakeFiles/rebuild_cache.dir
