@@ -1,0 +1,8 @@
+{
+    "cmake.generator": "Ninja",
+    "cmake.buildDirectory": "${workspaceFolder}/.cmake-build",
+    "cmake.buildType": "Debug",
+    "cmake.debugConfig": {
+        "cwd": "${workspaceFolder}"
+    }
+}

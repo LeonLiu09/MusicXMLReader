@@ -5,7 +5,10 @@
 #include <windows.h>
 #endif
 
-#include "pugixml.hpp"
+// 使用 pugixml 的 header-only 模式。
+// 这样 VS Code 只编译 main.cpp 时，也会包含 pugixml 的完整实现。
+#define PUGIXML_HEADER_ONLY
+#include "lib/pugixml/pugixml.hpp"
 
 // 把 MusicXML 使用的英文时值转换成容易阅读的中文。
 std::string note_type_in_chinese(const std::string& type)
@@ -72,68 +75,89 @@ int main()
         std::cout << "全曲速度：MusicXML 文件中未标注\n";
     }
 
-    // 3. 找到第一声部的第 1 小节。
+    // 3. 找到第一声部，按顺序读取它的所有小节。
     pugi::xml_node part = score.child("part");
-    pugi::xml_node measure = part.find_child_by_attribute("measure", "number", "1");
-
-    if (!measure)
+    if (!part)
     {
-        std::cerr << "没有找到第 1 小节。\n";
+        std::cerr << "没有找到声部。\n";
         return 1;
     }
 
-    int divisions = measure.child("attributes").child("divisions").text().as_int();
+    int divisions = 0;
+    int measure_count = 0;
 
-    std::cout << "\n第一小节：\n";
-    std::cout << "divisions = " << divisions
-              << "（一个四分音符包含的 duration 单位数）\n";
-
-    int note_number = 0;
-    for (pugi::xml_node note : measure.children("note"))
+    for (pugi::xml_node measure : part.children("measure"))
     {
-        ++note_number;
+        ++measure_count;
 
-        pugi::xml_node pitch = note.child("pitch");
-        pugi::xml_node technical = note.child("notations").child("technical");
+        // MusicXML 中的 divisions 会一直有效，直到后面的小节重新声明它。
+        pugi::xml_node divisions_node =
+            measure.child("attributes").child("divisions");
+        if (divisions_node)
+            divisions = divisions_node.text().as_int();
 
-        std::string type = note.child("type").text().as_string();
-        int duration = note.child("duration").text().as_int();
-        int string_number = technical.child("string").text().as_int(-1);
-        int fret_number = technical.child("fret").text().as_int(-1);
+        std::string measure_number = measure.attribute("number").as_string();
+        if (measure_number.empty())
+            measure_number = std::to_string(measure_count);
 
-        std::cout << "音符 " << note_number;
-        if (note.child("chord"))
-            std::cout << "（与前一个音同时弹奏）";
-        std::cout << "：\n";
+        std::cout << "\n第 " << measure_number << " 小节：\n";
+        std::cout << "divisions = " << divisions
+                  << "（一个四分音符包含的 duration 单位数）\n";
 
-        if (pitch)
+        int note_number = 0;
+        for (pugi::xml_node note : measure.children("note"))
         {
-            std::cout << "  音高："
-                      << pitch.child("step").text().as_string()
-                      << pitch.child("octave").text().as_string()
-                      << '\n';
+            ++note_number;
+
+            pugi::xml_node pitch = note.child("pitch");
+            pugi::xml_node technical = note.child("notations").child("technical");
+
+            std::string type = note.child("type").text().as_string();
+            int duration = note.child("duration").text().as_int();
+            int string_number = technical.child("string").text().as_int(-1);
+            int fret_number = technical.child("fret").text().as_int(-1);
+
+            std::cout << "音符 " << note_number;
+            if (note.child("chord"))
+                std::cout << "（与前一个音同时弹奏）";
+            std::cout << "：\n";
+
+            if (pitch)
+            {
+                std::cout << "  音高："
+                          << pitch.child("step").text().as_string()
+                          << pitch.child("octave").text().as_string()
+                          << '\n';
+            }
+
+            if (string_number >= 0 && fret_number >= 0)
+            {
+                std::cout << "  弦：第 " << string_number << " 弦\n";
+                std::cout << "  品：第 " << fret_number << " 品\n";
+            }
+            else
+            {
+                std::cout << "  弦、品：未标注\n";
+            }
+
+            std::cout << "  时值：" << note_type_in_chinese(type)
+                      << "（duration = " << duration;
+            if (divisions > 0)
+                std::cout << "，相当于 "
+                          << static_cast<double>(duration) / divisions
+                          << " 个四分音符";
+            std::cout << "）\n";
         }
 
-        if (string_number >= 0 && fret_number >= 0)
-        {
-            std::cout << "  弦：第 " << string_number << " 弦\n";
-            std::cout << "  品：第 " << fret_number << " 品\n";
-        }
-        else
-        {
-            std::cout << "  弦、品：未标注\n";
-        }
-
-        std::cout << "  时值：" << note_type_in_chinese(type)
-                  << "（duration = " << duration;
-        if (divisions > 0)
-            std::cout << "，相当于 " << static_cast<double>(duration) / divisions
-                      << " 个四分音符";
-        std::cout << "）\n";
+        if (note_number == 0)
+            std::cout << "这一小节没有音符。\n";
     }
 
-    if (note_number == 0)
-        std::cout << "这一小节没有音符。\n";
+    if (measure_count == 0)
+    {
+        std::cerr << "没有找到任何小节。\n";
+        return 1;
+    }
 
     return 0;
 }

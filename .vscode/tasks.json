@@ -1,28 +1,67 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
-            "label": "C/C++: g++.exe 生成活动文件",
-            "command": "C:\\Users\\Work\\Documents\\C++\\MSY32\\ucrt64\\bin\\g++.exe",
+            "type": "process",
+            "label": "CMake: 配置整个项目",
+            "command": "cmake",
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "-S",
+                "${workspaceFolder}",
+                "-B",
+                "${workspaceFolder}/.cmake-build",
+                "-G",
+                "Ninja",
+                "-DCMAKE_BUILD_TYPE=Debug"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${workspaceFolder}"
             },
+            "problemMatcher": []
+        },
+        {
+            "type": "process",
+            "label": "CMake: 编译整个项目",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/.cmake-build",
+                "--target",
+                "MusicXMLReader"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: 配置整个项目",
+            "dependsOrder": "sequence",
             "problemMatcher": [
                 "$gcc"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
+            }
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe 生成活动文件",
+            "command": "cmake",
+            "args": [
+                "-E",
+                "copy_if_different",
+                "${workspaceFolder}/.cmake-build/MusicXMLReader.exe",
+                "${workspaceFolder}/main.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
             },
-            "detail": "调试器生成的任务。"
+            "dependsOn": "CMake: 编译整个项目",
+            "dependsOrder": "sequence",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "兼容 VS Code 的“运行 C/C++ 文件”按钮：先通过 CMake 编译整个项目。"
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

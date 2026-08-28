@@ -1,2 +1,4 @@
 .musicxml
 .xml
+/.cmake-build/
+/main.exe

@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "运行 MusicXMLReader 整个项目",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.cmake-build/MusicXMLReader.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/Users/Work/Documents/C++/MSY32/ucrt64/bin/gdb.exe",
+            "preLaunchTask": "CMake: 编译整个项目"
+        }
+    ]
+}
