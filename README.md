@@ -44,7 +44,7 @@ ctest --test-dir .cmake-build --output-on-failure
 
 ## Arduino 测试
 
-1. 按接线说明连接 Uno、两片 SN74HC595、12 个 LED 和各自的 680Ω 电阻。
+1. 按 [`Arduino UNO R3 引脚与两片 SN74HC595 接线说明`](arduino/MusicXMLShiftRegister/接线说明.md) 连接 Uno、两片 SN74HC595、12 个 LED 和各自的 680Ω 电阻。
 2. 用 Arduino IDE 打开 `arduino/MusicXMLShiftRegister/MusicXMLShiftRegister.ino`。
 3. 选择 `Arduino Uno` 和对应串口。
 4. 先点击“验证”，再点击“上传”。
