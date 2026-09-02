@@ -51,8 +51,10 @@ int main()
               << musicxml_arduino::kVersion << '\n';
     std::cout << "Arduino：Uno R3\n";
     std::cout << "控制引脚：D11=数据，D13=移位时钟，D10=锁存\n";
-    std::cout << "输出规则：U1 控制第 1 品，U2 控制第 2 品；"
-                 "每片 QA-QF 对应第 1-6 弦。\n\n";
+    std::cout << "输出规则：U1 的 QA 对应空弦阴极，QB-QG 对应第 1-6 品阴极；"
+                 "U2 的 QA-QF 对应第 1-6 弦阳极。\n";
+    std::cout << "显示方式：Arduino 动态扫描 7 个品位，"
+                 "不是让 42 个灯静态直连。\n\n";
 
     for (std::size_t index = 0; index < result.events.size(); ++index)
     {
@@ -62,15 +64,19 @@ int main()
                   << " | BPM " << std::fixed << std::setprecision(2)
                   << event.bpm
                   << " | " << event.duration_ms << " ms"
-                  << " | mask=" << musicxml_arduino::mask_in_hex(event.mask)
-                  << " | " << musicxml_arduino::describe_mask(event.mask)
+                  << " | 空弦及第1-6品弦掩码="
+                  << musicxml_arduino::fret_masks_in_hex(
+                         event.string_masks_by_fret)
+                  << " | "
+                  << musicxml_arduino::describe_fret_masks(
+                         event.string_masks_by_fret)
                   << '\n';
     }
 
     std::cout << "\n转换完成：\n";
     std::cout << "  原始音符数：" << result.note_count << '\n';
     std::cout << "  Arduino 事件数：" << result.events.size() << '\n';
-    std::cout << "  已映射到第 1/2 品的音符数："
+    std::cout << "  已映射到空弦及第 1-6 品的音符数："
               << result.mapped_note_count << '\n';
     std::cout << "  至少点亮一路的事件数："
               << result.nonzero_event_count << '\n';

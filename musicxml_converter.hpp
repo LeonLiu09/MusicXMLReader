@@ -18,8 +18,10 @@
 namespace musicxml_arduino
 {
 
-inline constexpr const char* kVersion = "v2.0";
+inline constexpr const char* kVersion = "v2.1";
 constexpr double kDefaultBpm = 80.0;
+constexpr int kStringCount = 6;
+constexpr int kFretCount = 7;
 
 struct NoteTarget
 {
@@ -34,7 +36,8 @@ struct SongEvent
     double start_quarters = 0.0;
     double end_quarters = 0.0;
     double bpm = kDefaultBpm;
-    std::uint16_t mask = 0;
+    // 下标 0 表示空弦，下标 1-6 表示第 1-6 品；低 6 位对应第 1-6 弦。
+    std::array<std::uint8_t, kFretCount> string_masks_by_fret{};
     std::uint32_t duration_ms = 0;
     std::vector<NoteTarget> notes;
 };
@@ -171,13 +174,11 @@ inline void add_tempo_change(
 
 inline int output_bit_for(int string_number, int fret_number)
 {
-    if (string_number < 1 || string_number > 6)
+    if (string_number < 1 || string_number > kStringCount)
         return -1;
-    if (fret_number == 1)
-        return string_number - 1;
-    if (fret_number == 2)
-        return 8 + string_number - 1;
-    return -1;
+    if (fret_number < 0 || fret_number >= kFretCount)
+        return -1;
+    return fret_number * kStringCount + string_number - 1;
 }
 
 inline double tempo_at(
@@ -240,24 +241,25 @@ inline std::uint32_t duration_in_milliseconds(
     return static_cast<std::uint32_t>(std::llround(milliseconds));
 }
 
-inline bool apply_output_mask(
+inline bool apply_output_masks(
     SongEvent& event,
     ConversionResult& result,
     std::string& error)
 {
-    std::array<int, 7> fret_for_string{};
+    std::array<int, kStringCount + 1> fret_for_string{};
     fret_for_string.fill(-1);
 
     for (const NoteTarget& note : event.notes)
     {
         if (note.is_rest ||
-            (note.fret_number != 1 && note.fret_number != 2))
+            note.fret_number < 0 ||
+            note.fret_number >= kFretCount)
             continue;
 
-        if (note.string_number < 1 || note.string_number > 6)
+        if (note.string_number < 1 || note.string_number > kStringCount)
         {
             error = "第 " + event.measure_number +
-                    " 小节存在第 1/2 品音符，但弦号不在 1-6 范围内。";
+                    " 小节存在空弦或第 1-6 品音符，但弦号不在 1-6 范围内。";
             return false;
         }
 
@@ -266,14 +268,13 @@ inline bool apply_output_mask(
         {
             error = "第 " + event.measure_number + " 小节的同一个和弦要求第 " +
                     std::to_string(note.string_number) +
-                    " 弦同时按第 1 品和第 2 品。";
+                    " 弦同时按不同品位。";
             return false;
         }
         existing_fret = note.fret_number;
 
-        const int bit = output_bit_for(
-            note.string_number, note.fret_number);
-        event.mask |= static_cast<std::uint16_t>(1u << bit);
+        event.string_masks_by_fret[note.fret_number] |=
+            static_cast<std::uint8_t>(1u << (note.string_number - 1));
         ++result.mapped_note_count;
     }
     return true;
@@ -529,7 +530,7 @@ inline bool convert_document(
 
     for (SongEvent& event : result.events)
     {
-        if (!apply_output_mask(event, result, error))
+        if (!apply_output_masks(event, result, error))
             return false;
 
         event.bpm = tempo_at(
@@ -545,40 +546,71 @@ inline bool convert_document(
             return false;
         }
 
-        if (event.mask == 0)
-            ++result.zero_event_count;
-        else
+        const bool has_lit_led = std::any_of(
+            event.string_masks_by_fret.begin(),
+            event.string_masks_by_fret.end(),
+            [](std::uint8_t mask) { return mask != 0; });
+        if (has_lit_led)
             ++result.nonzero_event_count;
+        else
+            ++result.zero_event_count;
     }
 
     return true;
 }
 
-inline std::string mask_in_hex(std::uint16_t mask)
+inline std::string mask_in_hex(std::uint8_t mask)
 {
     std::ostringstream stream;
     stream << "0x" << std::uppercase << std::hex
-           << std::setw(4) << std::setfill('0') << mask;
+           << std::setw(2) << std::setfill('0')
+           << static_cast<unsigned int>(mask);
     return stream.str();
 }
 
-inline std::string describe_mask(std::uint16_t mask)
+inline std::string fret_masks_in_hex(
+    const std::array<std::uint8_t, kFretCount>& masks)
 {
-    if (mask == 0)
+    std::ostringstream stream;
+    stream << '[';
+    for (int fret_index = 0; fret_index < kFretCount; ++fret_index)
+    {
+        if (fret_index > 0)
+            stream << ", ";
+        stream << mask_in_hex(masks[fret_index]);
+    }
+    stream << ']';
+    return stream.str();
+}
+
+inline std::string describe_fret_masks(
+    const std::array<std::uint8_t, kFretCount>& masks)
+{
+    const bool has_lit_led = std::any_of(
+        masks.begin(), masks.end(),
+        [](std::uint8_t mask) { return mask != 0; });
+    if (!has_lit_led)
         return "全部熄灭";
 
     std::ostringstream stream;
     bool first = true;
-    for (int fret = 1; fret <= 2; ++fret)
+    for (int fret = 0; fret < kFretCount; ++fret)
     {
-        for (int string_number = 1; string_number <= 6; ++string_number)
+        for (int string_number = 1;
+             string_number <= kStringCount;
+             ++string_number)
         {
-            const int bit = output_bit_for(string_number, fret);
-            if ((mask & static_cast<std::uint16_t>(1u << bit)) == 0)
+            const std::uint8_t string_bit = static_cast<std::uint8_t>(
+                1u << (string_number - 1));
+            if ((masks[fret] & string_bit) == 0)
                 continue;
             if (!first)
                 stream << "，";
-            stream << "第 " << string_number << " 弦第 " << fret << " 品";
+            stream << "第 " << string_number << " 弦";
+            if (fret == 0)
+                stream << "空弦";
+            else
+                stream << "第 " << fret << " 品";
             first = false;
         }
     }
@@ -603,9 +635,11 @@ inline bool write_arduino_header(
            << "#pragma once\n\n"
            << "#include <Arduino.h>\n"
            << "#include <avr/pgmspace.h>\n\n"
+           << "const uint8_t MATRIX_FRET_COUNT = 7;\n"
+           << "const uint8_t MATRIX_STRING_COUNT = 6;\n\n"
            << "struct SongEvent\n"
            << "{\n"
-           << "    uint16_t mask;\n"
+           << "    uint8_t stringMasksByFret[MATRIX_FRET_COUNT];\n"
            << "    uint32_t durationMs;\n"
            << "};\n\n"
            << "const SongEvent SONG_EVENTS[] PROGMEM =\n"
@@ -613,8 +647,15 @@ inline bool write_arduino_header(
 
     for (const SongEvent& event : result.events)
     {
-        output << "    {" << mask_in_hex(event.mask)
-               << ", " << event.duration_ms << "UL},"
+        output << "    {{";
+        for (int fret_index = 0; fret_index < kFretCount; ++fret_index)
+        {
+            if (fret_index > 0)
+                output << ", ";
+            output << mask_in_hex(
+                event.string_masks_by_fret[fret_index]);
+        }
+        output << "}, " << event.duration_ms << "UL},"
                << " // 小节 " << event.measure_number
                << ", BPM " << std::fixed << std::setprecision(2)
                << event.bpm << "\n";
