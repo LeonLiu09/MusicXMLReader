@@ -18,7 +18,7 @@
 namespace musicxml_arduino
 {
 
-inline constexpr const char* kVersion = "v2.1";
+inline constexpr const char* kVersion = "v2.2";
 constexpr double kDefaultBpm = 80.0;
 constexpr int kStringCount = 6;
 constexpr int kFretCount = 7;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(MusicXMLReader VERSION 2.1 LANGUAGES CXX)
+project(MusicXMLReader VERSION 2.2 LANGUAGES CXX)
 
 add_executable(MusicXMLReader
     main.cpp

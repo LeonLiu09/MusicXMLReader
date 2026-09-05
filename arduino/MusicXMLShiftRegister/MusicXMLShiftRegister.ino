@@ -3,9 +3,9 @@
 
 #include "song_data.h"
 
-// MusicXMLReader v2.1：7x6 点阵动态扫描程序。
+// MusicXMLReader v2.2：7x6 点阵动态扫描程序。
 // U1（靠近 Arduino）：QA -> 空弦阴极，QB-QG -> 第 1-6 品阴极。
-// U2（级联的第二片）：QA-QF -> 第 1-6 弦阳极。
+// U2（级联的第二片）：QA-QF -> 第 6-1 弦阳极，现有接线无需调整。
 const uint8_t DATA_PIN = 11;   // D11 -> U1 pin 14 (SER)
 const uint8_t CLOCK_PIN = 13;  // D13 -> U1/U2 pin 11 (SRCLK)
 const uint8_t LATCH_PIN = 10;  // D10 -> U1/U2 pin 12 (RCLK)
@@ -24,10 +24,20 @@ void writeMatrixOutputs(uint8_t fretCathodes, uint8_t stringAnodes)
   fretCathodes &= FRET_OUTPUT_MASK;
   stringAnodes &= STRING_OUTPUT_MASK;
 
+  // 乐谱数据的 bit 0-5 仍表示第 1-6 弦，只在输出时镜像低 6 位。
+  // QA <-> QF、QB <-> QE、QC <-> QD；QG/QH 保持 LOW。
+  const uint8_t mirroredStringAnodes = static_cast<uint8_t>(
+      ((stringAnodes & 0x01u) << 5) |
+      ((stringAnodes & 0x02u) << 3) |
+      ((stringAnodes & 0x04u) << 1) |
+      ((stringAnodes & 0x08u) >> 1) |
+      ((stringAnodes & 0x10u) >> 3) |
+      ((stringAnodes & 0x20u) >> 5));
+
   digitalWrite(LATCH_PIN, LOW);
 
   // 先送出的字节最终进入较远的 U2（6 根弦阳极）。
-  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, stringAnodes);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, mirroredStringAnodes);
 
   // 后送出的字节留在靠近 Arduino 的 U1（7 个品位阴极）。
   shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, fretCathodes);

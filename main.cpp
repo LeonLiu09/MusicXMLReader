@@ -52,7 +52,9 @@ int main()
     std::cout << "Arduino：Uno R3\n";
     std::cout << "控制引脚：D11=数据，D13=移位时钟，D10=锁存\n";
     std::cout << "输出规则：U1 的 QA 对应空弦阴极，QB-QG 对应第 1-6 品阴极；"
-                 "U2 的 QA-QF 对应第 1-6 弦阳极。\n";
+                 "U2 的 QA-QF 对应第 6-1 弦阳极。\n";
+    std::cout << "弦方向：Arduino 在输出时镜像六根弦，现有接线无需调整；"
+                 "乐谱数据仍按第 1-6 弦保存。\n";
     std::cout << "显示方式：Arduino 动态扫描 7 个品位，"
                  "不是让 42 个灯静态直连。\n\n";
 

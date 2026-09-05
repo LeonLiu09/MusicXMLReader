@@ -1,4 +1,4 @@
-// 本文件由 MusicXMLReader v2.1 自动生成，请不要手工修改。
+// 本文件由 MusicXMLReader v2.2 自动生成，请不要手工修改。
 #pragma once
 
 #include <Arduino.h>
